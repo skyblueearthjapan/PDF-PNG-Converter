@@ -78,41 +78,48 @@ python main.py
 http://localhost:8000
 ```
 
-## クラウドデプロイ（Railway）
+## クラウドデプロイ（Render）
 
-このアプリケーションをインターネット上に公開するには、Railwayを使用すると簡単です。
+このアプリケーションをインターネット上に公開するには、Renderを使用すると簡単です。
 
-### Railwayへのデプロイ手順
+### Renderへのデプロイ手順
 
-1. **Railwayアカウント作成**
-   - https://railway.app にアクセス
-   - GitHubアカウントでサインアップ
+#### 方法1：Blueprint（ワンクリックデプロイ）
 
-2. **新規プロジェクト作成**
-   - 「New Project」をクリック
-   - 「Deploy from GitHub repo」を選択
-   - このリポジトリ（PDF-PNG-Converter）を選択
+1. **Renderアカウント作成**
+   - https://render.com にアクセス
+   - GitHubアカウントでサインアップ（無料）
 
-3. **自動デプロイ**
-   - Railwayが自動的にビルド・デプロイを開始します
-   - 数分でデプロイが完了します
+2. **Blueprintからデプロイ**
+   - Renderダッシュボードで「New」→「Blueprint」を選択
+   - GitHubリポジトリを接続
+   - `render.yaml`が自動検出されます
+   - 「Apply」をクリック
 
-4. **URLの取得**
-   - デプロイ完了後、「Settings」→「Domains」
-   - 「Generate Domain」をクリック
-   - 生成されたURLでアクセス可能になります
+3. **デプロイ完了**
+   - 自動的にビルド・デプロイが開始
+   - 5-10分でデプロイ完了
+   - 生成されたURLでアクセス可能
+
+#### 方法2：手動デプロイ
+
+1. Renderダッシュボードで「New」→「Web Service」
+2. GitHubリポジトリを選択
+3. 以下の設定を入力：
+   - **Name**: pdf-png-converter
+   - **Environment**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. 「Create Web Service」をクリック
 
 ### 料金
-- **無料枠**: 月500時間まで無料
-- スリープなし、常時起動
-- 個人利用には十分
+- **完全無料**: クレジットカード不要
+- ⚠️ 15分間アクセスがないと自動スリープ
+- 起動に30秒-1分程度かかる
+- 個人利用・テストには十分
 
 ### デプロイ設定ファイル
-以下のファイルが含まれています：
-- `railway.toml`: Railway設定
-- `nixpacks.toml`: システム依存関係
-- `Procfile`: 起動コマンド
-- `runtime.txt`: Pythonバージョン
+- `render.yaml`: Render Blueprint設定（自動デプロイ用）
 
 ## 使用方法
 
@@ -137,10 +144,7 @@ PDF-PNG-Converter/
 ├── main.py                 # FastAPIアプリケーション（メイン）
 ├── requirements.txt        # Python依存関係
 ├── README.md              # このファイル
-├── railway.toml           # Railway設定ファイル
-├── nixpacks.toml          # システム依存関係設定
-├── Procfile               # 起動コマンド
-├── runtime.txt            # Pythonバージョン指定
+├── render.yaml            # Render Blueprint設定
 ├── templates/
 │   └── index.html         # メインページのHTML
 ├── static/
