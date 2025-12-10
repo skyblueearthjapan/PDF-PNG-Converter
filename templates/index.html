@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF ⇔ PNG 変換ツール</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF ⇔ PNG 変換ツール</h1>
+            <p class="subtitle">ブラウザで簡単にPDFとPNG画像を相互変換</p>
+        </header>
+
+        <main>
+            <!-- PDF → PNG 変換セクション -->
+            <section class="converter-section">
+                <div class="section-header">
+                    <h2>📄 PDF → PNG 変換</h2>
+                    <p>PDFファイルをアップロードして、各ページをPNG画像に変換します</p>
+                </div>
+
+                <div class="upload-area" id="pdf-upload-area">
+                    <input type="file" id="pdf-file-input" accept=".pdf" multiple hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p class="upload-text">クリックしてPDFファイルを選択</p>
+                        <p class="upload-subtext">または、ここにファイルをドラッグ＆ドロップ</p>
+                        <p class="upload-hint">複数ファイル対応・最大200ページまで処理可能</p>
+                    </div>
+                </div>
+
+                <div class="file-list" id="pdf-file-list"></div>
+
+                <button class="btn btn-primary" id="pdf-convert-btn" disabled>
+                    PNG画像に変換（ZIPダウンロード）
+                </button>
+
+                <div class="status-message" id="pdf-status"></div>
+            </section>
+
+            <!-- PNG → PDF 変換セクション -->
+            <section class="converter-section">
+                <div class="section-header">
+                    <h2>🖼️ PNG → PDF 変換</h2>
+                    <p>複数のPNG画像をアップロードして、1つのPDFファイルに結合します</p>
+                </div>
+
+                <div class="upload-area" id="png-upload-area">
+                    <input type="file" id="png-file-input" accept=".png,.jpg,.jpeg" multiple hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p class="upload-text">クリックしてPNG/JPG画像を選択</p>
+                        <p class="upload-subtext">または、ここにファイルをドラッグ＆ドロップ</p>
+                        <p class="upload-hint">複数ファイル対応・ファイル名順で結合されます</p>
+                    </div>
+                </div>
+
+                <div class="file-list" id="png-file-list"></div>
+
+                <button class="btn btn-primary" id="png-convert-btn" disabled>
+                    PDFファイルに結合
+                </button>
+
+                <div class="status-message" id="png-status"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 PDF ⇔ PNG 変換ツール</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
