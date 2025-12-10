@@ -78,6 +78,42 @@ python main.py
 http://localhost:8000
 ```
 
+## クラウドデプロイ（Railway）
+
+このアプリケーションをインターネット上に公開するには、Railwayを使用すると簡単です。
+
+### Railwayへのデプロイ手順
+
+1. **Railwayアカウント作成**
+   - https://railway.app にアクセス
+   - GitHubアカウントでサインアップ
+
+2. **新規プロジェクト作成**
+   - 「New Project」をクリック
+   - 「Deploy from GitHub repo」を選択
+   - このリポジトリ（PDF-PNG-Converter）を選択
+
+3. **自動デプロイ**
+   - Railwayが自動的にビルド・デプロイを開始します
+   - 数分でデプロイが完了します
+
+4. **URLの取得**
+   - デプロイ完了後、「Settings」→「Domains」
+   - 「Generate Domain」をクリック
+   - 生成されたURLでアクセス可能になります
+
+### 料金
+- **無料枠**: 月500時間まで無料
+- スリープなし、常時起動
+- 個人利用には十分
+
+### デプロイ設定ファイル
+以下のファイルが含まれています：
+- `railway.toml`: Railway設定
+- `nixpacks.toml`: システム依存関係
+- `Procfile`: 起動コマンド
+- `runtime.txt`: Pythonバージョン
+
 ## 使用方法
 
 ### PDF → PNG 変換
@@ -101,6 +137,10 @@ PDF-PNG-Converter/
 ├── main.py                 # FastAPIアプリケーション（メイン）
 ├── requirements.txt        # Python依存関係
 ├── README.md              # このファイル
+├── railway.toml           # Railway設定ファイル
+├── nixpacks.toml          # システム依存関係設定
+├── Procfile               # 起動コマンド
+├── runtime.txt            # Pythonバージョン指定
 ├── templates/
 │   └── index.html         # メインページのHTML
 ├── static/
