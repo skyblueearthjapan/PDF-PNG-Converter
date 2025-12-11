@@ -8,6 +8,8 @@ import io
 import shutil
 import tempfile
 import zipfile
+import unicodedata
+import re
 from pathlib import Path
 from typing import List
 
@@ -19,6 +21,21 @@ from fastapi import Request
 
 from PIL import Image
 import fitz  # PyMuPDF
+
+
+def sanitize_filename(filename: str) -> str:
+    """
+    ファイル名を安全な形式に変換（日本語対応）
+    """
+    # Unicode正規化
+    filename = unicodedata.normalize('NFKC', filename)
+    # 安全でない文字を削除
+    filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    # 長さ制限
+    if len(filename) > 200:
+        name, ext = os.path.splitext(filename)
+        filename = name[:200-len(ext)] + ext
+    return filename
 
 app = FastAPI(title="PDF ⇔ PNG Converter")
 
@@ -51,8 +68,10 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
 
     try:
         all_png_files = []
+        # ファイル名の重複を防ぐため、使用済みファイル名を記録
+        used_filenames = set()
 
-        for upload_file in files:
+        for file_index, upload_file in enumerate(files, start=1):
             # PDFファイルのチェック
             if not upload_file.filename.lower().endswith('.pdf'):
                 raise HTTPException(
@@ -60,8 +79,11 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
                     detail=f"{upload_file.filename} はPDFファイルではありません"
                 )
 
+            # ファイル名をサニタイズ
+            safe_filename = sanitize_filename(upload_file.filename)
+
             # PDFファイルの保存
-            pdf_path = Path(temp_dir) / upload_file.filename
+            pdf_path = Path(temp_dir) / safe_filename
             with open(pdf_path, "wb") as f:
                 content = await upload_file.read()
                 f.write(content)
@@ -76,7 +98,11 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
                 )
 
             # ベースファイル名（拡張子なし）
-            base_name = Path(upload_file.filename).stem
+            base_name = Path(safe_filename).stem
+
+            # 複数ファイルの場合は接頭辞を追加
+            if len(files) > 1:
+                base_name = f"file{file_index:02d}_{base_name}"
 
             # 各ページをPNGに変換（メモリ効率を考慮してページごとに処理）
             for page_num in range(len(pdf_document)):
@@ -87,8 +113,18 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
                 mat = fitz.Matrix(zoom, zoom)
                 pix = page.get_pixmap(matrix=mat)
 
-                # PNG画像として保存
+                # PNG画像として保存（重複チェック付き）
                 png_filename = f"{base_name}_{page_num + 1:03d}.png"
+
+                # ファイル名が重複している場合は連番を追加
+                original_png_filename = png_filename
+                counter = 1
+                while png_filename in used_filenames:
+                    name_without_ext = original_png_filename.rsplit('.', 1)[0]
+                    png_filename = f"{name_without_ext}_dup{counter}.png"
+                    counter += 1
+
+                used_filenames.add(png_filename)
                 png_path = Path(temp_dir) / png_filename
                 pix.save(str(png_path))
 
@@ -99,18 +135,23 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
 
             pdf_document.close()
 
-        # ZIPファイルの作成
+        # ZIPファイルの作成（UTF-8対応）
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             for png_filename, png_path in all_png_files:
-                zip_file.write(png_path, png_filename)
+                # UTF-8エンコーディングでファイル名を追加
+                zipinfo = zipfile.ZipInfo(filename=png_filename)
+                zipinfo.compress_type = zipfile.ZIP_DEFLATED
+                zipinfo.flag_bits = 0x800  # UTF-8フラグ
+                with open(png_path, 'rb') as f:
+                    zip_file.writestr(zipinfo, f.read())
 
         zip_buffer.seek(0)
 
         # ZIPファイル名の決定
         if len(files) == 1:
-            base_name = Path(files[0].filename).stem
-            zip_filename = f"{base_name}_png_export.zip"
+            safe_base_name = Path(sanitize_filename(files[0].filename)).stem
+            zip_filename = f"{safe_base_name}_png_export.zip"
         else:
             zip_filename = "pdf_to_png_export.zip"
 
@@ -155,13 +196,16 @@ async def convert_png_to_pdf(files: List[UploadFile] = File(...)):
                     detail=f"{upload_file.filename} は対応する画像ファイルではありません（PNG/JPG対応）"
                 )
 
+            # ファイル名をサニタイズ
+            safe_filename = sanitize_filename(upload_file.filename)
+
             # 画像ファイルの保存
-            img_path = Path(temp_dir) / upload_file.filename
+            img_path = Path(temp_dir) / safe_filename
             with open(img_path, "wb") as f:
                 content = await upload_file.read()
                 f.write(content)
 
-            image_files.append((upload_file.filename, img_path))
+            image_files.append((safe_filename, img_path))
 
         # ファイル名順にソート
         image_files.sort(key=lambda x: x[0])
