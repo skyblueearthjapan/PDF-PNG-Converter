@@ -68,8 +68,10 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
 
     try:
         all_png_files = []
+        # ファイル名の重複を防ぐため、使用済みファイル名を記録
+        used_filenames = set()
 
-        for upload_file in files:
+        for file_index, upload_file in enumerate(files, start=1):
             # PDFファイルのチェック
             if not upload_file.filename.lower().endswith('.pdf'):
                 raise HTTPException(
@@ -98,6 +100,10 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
             # ベースファイル名（拡張子なし）
             base_name = Path(safe_filename).stem
 
+            # 複数ファイルの場合は接頭辞を追加
+            if len(files) > 1:
+                base_name = f"file{file_index:02d}_{base_name}"
+
             # 各ページをPNGに変換（メモリ効率を考慮してページごとに処理）
             for page_num in range(len(pdf_document)):
                 page = pdf_document[page_num]
@@ -107,8 +113,18 @@ async def convert_pdf_to_png(files: List[UploadFile] = File(...)):
                 mat = fitz.Matrix(zoom, zoom)
                 pix = page.get_pixmap(matrix=mat)
 
-                # PNG画像として保存
+                # PNG画像として保存（重複チェック付き）
                 png_filename = f"{base_name}_{page_num + 1:03d}.png"
+
+                # ファイル名が重複している場合は連番を追加
+                original_png_filename = png_filename
+                counter = 1
+                while png_filename in used_filenames:
+                    name_without_ext = original_png_filename.rsplit('.', 1)[0]
+                    png_filename = f"{name_without_ext}_dup{counter}.png"
+                    counter += 1
+
+                used_filenames.add(png_filename)
                 png_path = Path(temp_dir) / png_filename
                 pix.save(str(png_path))
 
